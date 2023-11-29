@@ -193,7 +193,7 @@ def test_dir_parenthesis_retrieval():
                             use_nearest_power=False)
     key1 = 'jacket::lattice'
     key2 = 'jacket::outfitting_8MW'
-    key = '2 * ({} + {})'.format(key1, key2)
+    key = f'2 * ({key1} + {key2})'
     eqn = obj[key]
     truth = ('(2 * (lattice(depth, lattice_cost, turbine_capacity) '
              '+ outfitting_8MW(depth, outfitting_cost)))')

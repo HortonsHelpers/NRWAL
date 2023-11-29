@@ -31,16 +31,16 @@ def test_print_eqn():
     known_vars = ('depth', 'outfitting_cost')
     eqn = obj[eqn_name]
     assert len(eqn.variables) == len(known_vars)
-    assert all([v in eqn.variables for v in known_vars])
-    assert all([v in str(eqn) for v in known_vars])
+    assert all(v in eqn.variables for v in known_vars)
+    assert all(v in str(eqn) for v in known_vars)
     assert eqn_name in str(eqn)
 
     eqn_name = 'lattice'
     known_vars = ('turbine_capacity', 'depth', 'lattice_cost')
     eqn = obj[eqn_name]
     assert len(eqn.variables) == len(known_vars)
-    assert all([v in eqn.variables for v in known_vars])
-    assert all([v in str(eqn) for v in known_vars])
+    assert all(v in eqn.variables for v in known_vars)
+    assert all(v in str(eqn) for v in known_vars)
     assert eqn_name in str(eqn)
 
     eqn = obj['subgroup::eqn1']
@@ -88,18 +88,18 @@ def test_eqn_math(operator):
     eqn1 = obj['jacket::lattice']
     eqn2 = obj['jacket::transition_piece']
 
-    if operator == '+':
-        eqn3 = eqn1 + eqn2
-        eqn4 = eqn1 + 3
-    elif operator == '-':
-        eqn3 = eqn1 - eqn2
-        eqn4 = eqn1 - 3
-    elif operator == '*':
+    if operator == '*':
         eqn3 = eqn1 * eqn2
         eqn4 = eqn1 * 3
     elif operator == '**':
         eqn3 = eqn1 ** eqn2
         eqn4 = eqn1 ** 3
+    elif operator == '+':
+        eqn3 = eqn1 + eqn2
+        eqn4 = eqn1 + 3
+    elif operator == '-':
+        eqn3 = eqn1 - eqn2
+        eqn4 = eqn1 - 3
     elif operator == '/':
         eqn3 = eqn1 / eqn2
         eqn4 = eqn1 / 3
@@ -110,7 +110,7 @@ def test_eqn_math(operator):
     assert eqn2.full in eqn3.full
     assert str(eqn1) in str(eqn4)
     assert eqn1.full in eqn4.full
-    assert '{} (3)'.format(operator) in eqn4.full
+    assert f'{operator} (3)' in eqn4.full
 
     args1 = {k: 2 for k in eqn1.variables}
     args2 = {k: 2 for k in eqn2.variables}

@@ -66,9 +66,8 @@ def test_nrwal_directory(dirname):
             bad_eqn_i.append(i)
 
     if any(bad_eqn_i):
-        msg = ('These equations in "{}" could not be evaluated: '
-               .format(dirname))
+        msg = f'These equations in "{dirname}" could not be evaluated: '
         for i in bad_eqn_i:
-            msg += '\n\t - {} {}'.format(groups[i]._base_name, eqns[i])
+            msg += f'\n\t - {groups[i]._base_name} {eqns[i]}'
 
         raise RuntimeError(msg)

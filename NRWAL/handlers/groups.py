@@ -101,8 +101,8 @@ class AbstractGroup(ABC):
             EquationGroup may be overwritten by the new input if a duplicate
             key exists.
         """
-        cls = self.__class__
         if isinstance(other, (str, dict)):
+            cls = self.__class__
             other = cls(other, interp_extrap_power=self._interp_extrap_power,
                         use_nearest_power=self._use_nearest_power,
                         interp_extrap_year=self._interp_extrap_year,
@@ -156,15 +156,14 @@ class AbstractGroup(ABC):
         op_map['^'] = operator.pow
         key = key.replace('**', '^')
 
-        if any([c in key for c in ('[', ']', '{', '}')]):
-            msg = ('Cannot parse EquationGroup key with square or curly '
-                   'brackets: {}'.format(key))
+        if any(c in key for c in ('[', ']', '{', '}')):
+            msg = f'Cannot parse EquationGroup key with square or curly brackets: {key}'
             logger.error(msg)
             raise ValueError(msg)
 
         while '(' in key:
             start_loc, end_loc = find_parens(key)[0]
-            wkey = 'workspace_{}'.format(1 + len(workspace))
+            wkey = f'workspace_{1 + len(workspace)}'
             assert wkey not in workspace
             pk = key[start_loc:end_loc + 1]
             key = key.replace(pk, wkey)
@@ -220,30 +219,26 @@ class AbstractGroup(ABC):
             workspace = {}
 
         operators = ('+', '-', '*', '/', '^')
-        if any([op in key for op in operators]):
+        if any(op in key for op in operators):
             return self._getitem_math(self, key, workspace)
 
         if key not in self and Equation.is_num(key):
             return Equation(key)
 
-        if '::' in str(key):
-            keys = key.split('::')
-        else:
-            keys = [key]
-
+        keys = key.split('::') if '::' in str(key) else [key]
         keys = [str(k) for k in keys]
         out = self._group
         for eqn_key in keys:
             nn_eqns, nn_values, eqn_value = \
-                self._get_nn_eqns_values(eqn_key, keys, out)
+                    self._get_nn_eqns_values(eqn_key, keys, out)
 
             if eqn_key in out:
                 out = out[eqn_key]
 
             elif (self._interp_extrap_power or self._interp_extrap_year
                     and len(nn_eqns) > 1):
-                x1, x3 = nn_values[0:2]
-                y1, y3 = nn_eqns[0:2]
+                x1, x3 = nn_values[:2]
+                y1, y3 = nn_eqns[:2]
                 out = (y3 - y1) * (eqn_value - x1) / (x3 - x1) + y1
                 if not any(out.variables):
                     out = Equation(out.eval())
@@ -252,9 +247,7 @@ class AbstractGroup(ABC):
                 out = nn_eqns[0]
 
             else:
-                msg = ('Could not retrieve equation key "{}", '
-                       'could not find "{}" in last available keys: {}'
-                       .format(key, eqn_key, list(out.keys())))
+                msg = f'Could not retrieve equation key "{key}", could not find "{eqn_key}" in last available keys: {list(out.keys())}'
                 logger.error(msg)
                 raise KeyError(msg)
 
@@ -355,11 +348,7 @@ class AbstractGroup(ABC):
             True if the regex pattern "_[0-9]*MW$" was found in key
         """
 
-        out = False
-        if cls._parse_power(key)[0] is not None:
-            out = True
-
-        return out
+        return cls._parse_power(key)[0] is not None
 
     @staticmethod
     def _parse_power(key):
@@ -463,11 +452,7 @@ class AbstractGroup(ABC):
             True if a year string *_YYYY is found in key
         """
 
-        out = False
-        if cls._parse_year(key)[0] is not None:
-            out = True
-
-        return out
+        return cls._parse_year(key)[0] is not None
 
     @staticmethod
     def _parse_year(key):
@@ -572,7 +557,7 @@ class AbstractGroup(ABC):
 
         if isinstance(group, str):
             if not os.path.exists(group):
-                msg = 'Cannot find equation file path: {}'.format(group)
+                msg = f'Cannot find equation file path: {group}'
                 logger.error(msg)
                 raise FileNotFoundError(msg)
 
@@ -585,13 +570,12 @@ class AbstractGroup(ABC):
                     group = yaml.safe_load(f)
 
             else:
-                msg = ('Cannot load file path, must be json or yaml: {}'
-                       .format(group))
+                msg = f'Cannot load file path, must be json or yaml: {group}'
                 logger.error(msg)
                 raise ValueError(msg)
 
         if not isinstance(group, dict):
-            msg = 'Cannot use group of type: {}'.format(type(group))
+            msg = f'Cannot use group of type: {type(group)}'
             logger.error(msg)
             raise TypeError(msg)
 
@@ -686,8 +670,7 @@ class EquationGroup(AbstractGroup):
     def __str__(self):
         s = ['EquationGroup object with heirarchy:']
         if self._base_name is not None:
-            s = ['EquationGroup object from "{}" with heirarchy:'
-                 .format(self._base_name)]
+            s = [f'EquationGroup object from "{self._base_name}" with heirarchy:']
 
         for k, v in self.items():
             if isinstance(v, Equation):
@@ -719,8 +702,7 @@ class EquationGroup(AbstractGroup):
 
         for k, v in sorted(eqn_group.items()):
             if Equation.is_num(k):
-                msg = ('You cannot use numbers as keys in group "{}"'
-                       .format(self._base_name))
+                msg = f'You cannot use numbers as keys in group "{self._base_name}"'
                 logger.error(msg)
                 raise ValueError(msg)
 
@@ -736,9 +718,7 @@ class EquationGroup(AbstractGroup):
                     use_nearest_year=self._use_nearest_year)
 
             else:
-                msg = ('Cannot use equation group value that is not a '
-                       'string, float, int, or dictionary: {} ({})'
-                       .format(v, type(v)))
+                msg = f'Cannot use equation group value that is not a string, float, int, or dictionary: {v} ({type(v)})'
                 logger.error(msg)
                 raise TypeError(msg)
 
@@ -763,9 +743,7 @@ class VariableGroup(AbstractGroup):
 
     def __str__(self):
         s = ['VariableGroup object with variable definitions:']
-        for k, v in self.items():
-            s.append('{}: {}'.format(k, v))
-
+        s.extend(f'{k}: {v}' for k, v in self.items())
         return '\n'.join(s)
 
     @property
@@ -796,16 +774,14 @@ class VariableGroup(AbstractGroup):
 
         for k, v in var_group.items():
             if Equation.is_num(k):
-                msg = ('You cannot use numbers as keys in group "{}"'
-                       .format(self._base_name))
+                msg = f'You cannot use numbers as keys in group "{self._base_name}"'
                 logger.error(msg)
                 raise ValueError(msg)
             if isinstance(v, int):
                 v = float(v)
                 var_group[k] = v
             if not isinstance(v, float):
-                msg = ('Cannot use variable group value that is not a '
-                       'float: {} ({})'.format(v, type(v)))
+                msg = f'Cannot use variable group value that is not a float: {v} ({type(v)})'
                 logger.error(msg)
                 raise TypeError(msg)
 

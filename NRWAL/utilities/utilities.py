@@ -32,7 +32,7 @@ def find_parens(s):
     indices = []
     pstack = []
 
-    msg = 'Unbalanced parenthesis in: {}'.format(s)
+    msg = f'Unbalanced parenthesis in: {s}'
     assert s.count('(') == s.count(')'), msg
 
     for i, c in enumerate(s):

@@ -44,8 +44,7 @@ class Equation:
         """Run preflight checks on the equation string."""
         for substr in self.ILLEGAL:
             if substr in str(self._eqn):
-                msg = ('Will not evaluate string which contains "{}": {}'
-                       .format(substr, self._eqn))
+                msg = f'Will not evaluate string which contains "{substr}": {self._eqn}'
                 logger.error(msg)
                 raise ValueError(msg)
 
@@ -54,10 +53,9 @@ class Equation:
         """Check that input args to equation are of expected types."""
         assert isinstance(kwargs, dict), 'Equation inputs must be a dict!'
         for k, v in kwargs.items():
-            msg = 'Input keys must be strings but received: {}'.format(k)
+            msg = f'Input keys must be strings but received: {k}'
             assert isinstance(k, str), msg
-            msg = ('Input data must be one of (int, float, np.ndarray, list, '
-                   'tuple), but received: {}'.format(type(v)))
+            msg = f'Input data must be one of (int, float, np.ndarray, list, tuple), but received: {type(v)}'
             assert isinstance(v, (int, float, np.ndarray, list, tuple)), msg
 
             if isinstance(v, np.ndarray):
@@ -92,8 +90,8 @@ class Equation:
         if not isinstance(other, Equation):
             other = cls(other)
 
-        new_eqn = '({}) {} ({})'.format(self._eqn, operator, other._eqn)
-        new_str = '({} {} {})'.format(self, operator, other)
+        new_eqn = f'({self._eqn}) {operator} ({other._eqn})'
+        new_str = f'({self} {operator} {other})'
         def_vars = copy.deepcopy(self._default_variables)
         def_vars.update(other._default_variables)
         out = cls(new_eqn, default_variables=def_vars)
@@ -225,19 +223,19 @@ class Equation:
                 vars_str = [v for v in self.variables
                             if v not in self.default_variables]
                 vars_str = str(vars_str).replace('[', '').replace(']', '')\
-                    .replace("'", '').replace('"', '')
+                        .replace("'", '').replace('"', '')
 
                 gvars_str = [v for v in self.variables
                              if v in self.default_variables]
                 for gvar in gvars_str:
                     base_str = ', ' if bool(vars_str) else ''
-                    kw_str = '{}={}'.format(gvar, self.default_variables[gvar])
+                    kw_str = f'{gvar}={self.default_variables[gvar]}'
                     vars_str += base_str + kw_str
 
                 if self._base_name is None:
-                    self._str = 'Equation({})'.format(vars_str)
+                    self._str = f'Equation({vars_str})'
                 else:
-                    self._str = '{}({})'.format(self._base_name, vars_str)
+                    self._str = f'{self._base_name}({vars_str})'
 
         return self._str
 
@@ -279,11 +277,7 @@ class Equation:
             Copied input args from var_group updated with kwargs.
         """
 
-        if var_group is None:
-            out = {}
-        else:
-            out = copy.deepcopy(var_group)
-
+        out = {} if var_group is None else copy.deepcopy(var_group)
         out.update(kwargs)
         return out
 
@@ -365,7 +359,7 @@ class Equation:
             check = False
         elif cls.is_num(expression):
             check = True
-        elif any([x in str(expression) for x in operators]):
+        elif any(x in str(expression) for x in operators):
             check = True
 
         return check
@@ -397,16 +391,14 @@ class Equation:
                    if v not in globals()
                    and v not in kwargs]
         if any(missing):
-            msg = ('Cannot evaluate "{}", missing the following input args: {}'
-                   .format(self, missing))
+            msg = f'Cannot evaluate "{self}", missing the following input args: {missing}'
             logger.error(msg)
             raise RuntimeError(msg)
 
         try:
             out = eval(str(self._eqn), globals(), kwargs)
         except Exception as e:
-            msg = ('Could not evaluate NRWAL Equation {}, received error: {}'
-                   .format(self, e))
+            msg = f'Could not evaluate NRWAL Equation {self}, received error: {e}'
             logger.exception(msg)
             raise RuntimeError(msg) from e
 

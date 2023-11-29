@@ -286,8 +286,8 @@ class EquationDirectory:
             original EquationDirectory may be overwritten by the new input if
             a duplicate key exists.
         """
-        cls = self.__class__
         if isinstance(other, str):
+            cls = self.__class__
             other = cls(other, interp_extrap_power=self._interp_extrap_power,
                         use_nearest_power=self._use_nearest_power,
                         interp_extrap_year=self._interp_extrap_year,
@@ -330,17 +330,13 @@ class EquationDirectory:
             workspace = {}
 
         operators = ('+', '-', '*', '/', '^')
-        if any([op in key for op in operators]):
+        if any(op in key for op in operators):
             return EquationGroup._getitem_math(self, key, workspace)
 
         if key not in self and Equation.is_num(key):
             return Equation(key)
 
-        if '::' in str(key):
-            keys = key.split('::')
-        else:
-            keys = [key]
-
+        keys = key.split('::') if '::' in str(key) else [key]
         keys = [str(k) if not str(k).endswith(('.json', '.yml', '.yaml'))
                 else os.path.splitext(str(k))[0]
                 for k in keys]
@@ -350,9 +346,7 @@ class EquationDirectory:
             try:
                 eqns = eqns[ikey]
             except KeyError:
-                msg = ('Could not retrieve equation key "{}", '
-                       'could not find "{}" in last available keys: {}'
-                       .format(key, ikey, list(eqns.keys())))
+                msg = f'Could not retrieve equation key "{key}", could not find "{ikey}" in last available keys: {list(eqns.keys())}'
                 # debug log statement to avoid unnecessary stdout
                 logger.debug(msg)
                 raise KeyError(msg)
@@ -389,8 +383,9 @@ class EquationDirectory:
         return str(self)
 
     def __str__(self):
-        s = ['EquationDirectory object from root directory "{}" '
-             'with heirarchy:'.format(self._base_name)]
+        s = [
+            f'EquationDirectory object from root directory "{self._base_name}" with heirarchy:'
+        ]
 
         var_groups = [v for v in self.values() if isinstance(v, VariableGroup)]
         eqn_groups = [v for v in self.values() if isinstance(v, EquationGroup)]
@@ -485,9 +480,7 @@ class EquationDirectory:
                         interp_extrap_year=interp_extrap_year,
                         use_nearest_year=use_nearest_year)
                 except Exception as e:
-                    msg = ('Could not parse an VariableGroup from '
-                           'file: "{}". Received the exception: {}'
-                           .format(name, e))
+                    msg = f'Could not parse an VariableGroup from file: "{name}". Received the exception: {e}'
                     logger.exception(msg)
                     raise RuntimeError(msg)
 
@@ -500,9 +493,7 @@ class EquationDirectory:
                         interp_extrap_year=interp_extrap_year,
                         use_nearest_year=use_nearest_year)
                 except Exception as e:
-                    msg = ('Could not parse an EquationGroup from '
-                           'file: "{}". Received the exception: {}'
-                           .format(name, e))
+                    msg = f'Could not parse an EquationGroup from file: "{name}". Received the exception: {e}'
                     logger.exception(msg)
                     raise RuntimeError(msg)
 

@@ -296,7 +296,7 @@ class NrwalConfig:
 
         if isinstance(config, str):
             if not os.path.exists(config):
-                msg = 'Cannot find config file path: {}'.format(config)
+                msg = f'Cannot find config file path: {config}'
                 logger.error(msg)
                 raise FileNotFoundError(msg)
 
@@ -311,19 +311,17 @@ class NrwalConfig:
                     config = yaml.safe_load(f)
 
             else:
-                msg = ('Cannot load file path, must be json or yaml: {}'
-                       .format(config))
+                msg = f'Cannot load file path, must be json or yaml: {config}'
                 logger.error(msg)
                 raise ValueError(msg)
 
         if not isinstance(config, dict):
-            msg = 'Cannot use config of type: {}'.format(type(config))
+            msg = f'Cannot use config of type: {type(config)}'
             logger.error(msg)
             raise TypeError(msg)
 
         if 'equation_directory' not in config:
-            msg = ('NrwalConfig using default "equation_directory": {}'
-                   .format(cls.DEFAULT_DIR))
+            msg = f'NrwalConfig using default "equation_directory": {cls.DEFAULT_DIR}'
             logger.info(msg)
             config['equation_directory'] = cls.DEFAULT_DIR
 
@@ -337,20 +335,17 @@ class NrwalConfig:
                        'config being input from a filepath.')
                 assert config_dir is not None, msg
 
-                msg = ('Config pointer to other config must be of the '
-                       'format "./other_config.yaml::retrieval_key" but '
-                       'received: {}'.format(value))
+                msg = f'Config pointer to other config must be of the format "./other_config.yaml::retrieval_key" but received: {value}'
                 assert value.count('::') == 1, msg
 
-                msg = ('Config pointer cannot include equations: {}'
-                       .format(value))
-                assert not any(x in value for x in ('*', '+', '(', ')')), msg
+                msg = f'Config pointer cannot include equations: {value}'
+                assert all(x not in value for x in ('*', '+', '(', ')')), msg
 
                 temp = value.partition('::')
                 fp_other, other_key = temp[0], temp[2]
                 fp_other = os.path.join(config_dir, fp_other)
 
-                msg = 'Config pointer file not found: {}'.format(fp_other)
+                msg = f'Config pointer file not found: {fp_other}'
                 assert os.path.exists(fp_other), msg
 
                 config[key] = cls._load_config(fp_other)[0][other_key]
@@ -374,12 +369,7 @@ class NrwalConfig:
             available within this config object.
         """
 
-        gvars = {}
-        for k, v in config.items():
-            if Equation.is_num(v):
-                gvars[k] = float(v)
-
-        return gvars
+        return {k: float(v) for k, v in config.items() if Equation.is_num(v)}
 
     @classmethod
     def _parse_config(cls, config, eqn_dir, gvars):
@@ -409,15 +399,12 @@ class NrwalConfig:
         out = {}
         for name, expression in config.items():
             if Equation.is_num(name):
-                msg = ('You cannot use numbers as keys in config: "{}"'
-                       .format(name))
+                msg = f'You cannot use numbers as keys in config: "{name}"'
                 logger.error(msg)
                 raise ValueError(msg)
 
             if not isinstance(expression, (int, float, str)):
-                msg = ('Cannot parse NrwalConfig expression for "{}", must be '
-                       'one of (int, float, str) but received type "{}": {}'
-                       .format(name, type(expression), expression))
+                msg = f'Cannot parse NrwalConfig expression for "{name}", must be one of (int, float, str) but received type "{type(expression)}": {expression}'
                 logger.error(msg)
                 raise TypeError(msg)
 
@@ -528,15 +515,14 @@ class NrwalConfig:
 
         assert Equation.is_equation(expression)
 
-        if any([c in expression for c in ('[', ']', '{', '}')]):
-            msg = ('Cannot parse config expression with square or curly '
-                   'brackets: {}'.format(expression))
+        if any(c in expression for c in ('[', ']', '{', '}')):
+            msg = f'Cannot parse config expression with square or curly brackets: {expression}'
             logger.error(msg)
             raise ValueError(msg)
 
         while '(' in expression:
             start_loc, end_loc = find_parens(expression)[0]
-            wkey = 'workspace_{}'.format(1 + len(gvars))
+            wkey = f'workspace_{1 + len(gvars)}'
             assert wkey not in gvars
             pk = expression[start_loc:end_loc + 1]
             expression = expression.replace(pk, wkey)
@@ -599,10 +585,7 @@ class NrwalConfig:
         out : int | float | np.ndarray | Equation
             Requested data prioritized from the outputs then the config.
         """
-        if key in self._outputs:
-            return self._outputs[key]
-        else:
-            return self._config[key]
+        return self._outputs[key] if key in self._outputs else self._config[key]
 
     def __getattr__(self, attr):
         """Retrieve data from the NrwalConfig, prioritizing outputs, then
@@ -689,8 +672,7 @@ class NrwalConfig:
                 self._inputs[k] = v
 
         else:
-            msg = ('Cannot set inputs as datatype "{}". '
-                   'Requires a dict or DataFrame.'.format(type(arg)))
+            msg = f'Cannot set inputs as datatype "{type(arg)}". Requires a dict or DataFrame.'
             logger.error(msg)
             raise TypeError(msg)
 
@@ -866,8 +848,7 @@ class NrwalConfig:
             self.inputs = inputs
 
         if not self.solvable:
-            msg = ('Cannot evaluate NrwalConfig, missing the following '
-                   'input args: {}'.format(self.missing_inputs))
+            msg = f'Cannot evaluate NrwalConfig, missing the following input args: {self.missing_inputs}'
             logger.error(msg)
             raise RuntimeError(msg)
 
@@ -876,8 +857,8 @@ class NrwalConfig:
             for k, v in self.items():
                 if (isinstance(v, (EquationGroup, EquationDirectory))
                         or Equation.is_num(v)):
-                    pass
-                elif isinstance(v, Equation):
+                    continue
+                if isinstance(v, Equation):
                     kwargs = copy.deepcopy(self.inputs)
                     kwargs.update(self._outputs)
 
@@ -891,30 +872,23 @@ class NrwalConfig:
                             elif var_name in v.default_variables:
                                 input_val = v.default_variables[var_name]
 
-                            msg = ('NRWAL input "{}": {} {}'
-                                   .format(var_name, input_val,
-                                           type(input_val)))
+                            msg = f'NRWAL input "{var_name}": {input_val} {type(input_val)}'
                             if isinstance(input_val, np.ndarray):
-                                msg += ' {}'.format(input_val.dtype)
+                                msg += f' {input_val.dtype}'
                             logger.info(msg)
 
-                        msg = ('Could not evaluate NRWAL equation: {}, '
-                               'received exception: {}'.format(v, e))
+                        msg = f'Could not evaluate NRWAL equation: {v}, received exception: {e}'
                         logger.exception(msg)
                         raise RuntimeError(msg) from e
 
-                elif isinstance(v, dict):
-                    pass
-                else:
-                    msg = ('Cannot evaluate "{}" with unexpected type: {}'
-                           .format(k, type(v)))
+                elif not isinstance(v, dict):
+                    msg = f'Cannot evaluate "{k}" with unexpected type: {type(v)}'
                     logger.error(msg)
                     raise TypeError(msg)
 
             i += 1
             if i > 100:
-                msg = ('NRWAL compute failed! The following config keys were '
-                       'never solved: {}'.format(self.to_be_solved))
+                msg = f'NRWAL compute failed! The following config keys were never solved: {self.to_be_solved}'
                 logger.error(msg)
                 raise RuntimeError(msg)
 

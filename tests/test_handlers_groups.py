@@ -204,7 +204,7 @@ def test_group_math_retrieval():
     y_math = eqn_math.eval(**{k: 2 for k in eqn_math.variables})
     assert y1 * y2 ** y4 == y_math
 
-    key_math = '(({} + {}) * ({} + {}))'.format(key1, key2, key3, key4)
+    key_math = f'(({key1} + {key2}) * ({key3} + {key4}))'
     eqn_math = obj[key_math]
     y_math = eqn_math.eval(**{k: 2 for k in eqn_math.variables})
     assert (y1 + y2) * (y3 + y4) == y_math
@@ -269,27 +269,27 @@ def test_group_parenthesis_retrieval():
     assert (outfit_val != 0) & (outfit_val != 1)
     assert (tpiece_val != 0) & (tpiece_val != 1)
 
-    key = '2 * ({} - {} + {})'.format(tpiece, lattice, outfitting)
+    key = f'2 * ({tpiece} - {lattice} + {outfitting})'
     eqn = obj[key]
     out = eqn.eval(**{k: 2 for k in eqn.variables})
     assert np.allclose(out, 2 * (tpiece_val - lattice_val + outfit_val))
 
-    key = '(2 * ({} / ({} + {})))'.format(tpiece, lattice, outfitting)
+    key = f'(2 * ({tpiece} / ({lattice} + {outfitting})))'
     eqn = obj[key]
     out = eqn.eval(**{k: 2 for k in eqn.variables})
     assert np.allclose(out, 2 * (tpiece_val / (lattice_val + outfit_val)))
 
-    key = '(2 * ({} - ({} + {})))'.format(tpiece, lattice, outfitting)
+    key = f'(2 * ({tpiece} - ({lattice} + {outfitting})))'
     eqn = obj[key]
     out = eqn.eval(**{k: 2 for k in eqn.variables})
     assert np.allclose(out, 2 * (tpiece_val - (lattice_val + outfit_val)))
 
-    key = '(2 * ({} - {}) * (4 + {}))'.format(tpiece, lattice, outfitting)
+    key = f'(2 * ({tpiece} - {lattice}) * (4 + {outfitting}))'
     eqn = obj[key]
     out = eqn.eval(**{k: 2 for k in eqn.variables})
     assert np.allclose(out, 2 * (tpiece_val - lattice_val) * (4 + outfit_val))
 
-    key = '(2 * ((({} - {}) ** 2) + {}))'.format(tpiece, lattice, outfitting)
+    key = f'(2 * ((({tpiece} - {lattice}) ** 2) + {outfitting}))'
     eqn = obj[key]
     out = eqn.eval(**{k: 2 for k in eqn.variables})
     assert np.allclose(out, 2 * (((tpiece_val - lattice_val) ** 2)
